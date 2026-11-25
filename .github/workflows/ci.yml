@@ -1,0 +1,52 @@
+name: CI
+
+# Roda nas interações com as branches main e develop:
+# - push direto (ou merge) nessas branches
+# - Pull Requests que têm essas branches como destino
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Se um novo commit chegar na mesma branch/PR, cancela a execução anterior
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: mypy, ruff e pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar uv e Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      # Instala o projeto e o grupo "dev" (mypy, pytest, ruff) do pyproject.toml
+      - name: Instalar dependências
+        run: uv sync
+
+      # O "if: !cancelled()" faz com que as três verificações rodem sempre,
+      # mesmo que uma anterior falhe. Assim o PR mostra todos os erros de uma vez.
+      - name: Verificar tipagem (mypy)
+        if: ${{ !cancelled() }}
+        run: uv run mypy .
+
+      # As regras D101 e D106 (docstring em classes) vêm do pyproject.toml
+      - name: Verificar boas práticas (ruff)
+        if: ${{ !cancelled() }}
+        run: uv run ruff check .
+
+      - name: Executar testes (pytest)
+        if: ${{ !cancelled() }}
+        run: uv run pytest .
