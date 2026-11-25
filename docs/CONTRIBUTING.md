@@ -1,6 +1,6 @@
 # 📖 Guia de contribuição - Agend.ae
 
-> **📅 Agend.ae**
+> **📅 Agend.ae**   
 > Agenda ae pae, modus operandi e produtivo
 
 > [!TIP]
@@ -35,9 +35,9 @@ git add .
 git commit -m "feat(usuario): adiciona classe Usuario"
 
 # 3. Verifique o código (os três devem passar sem erros)
-mypy .
-ruff check .
-pytest
+uv run mypy .
+uv run ruff check .
+uv run pytest
 
 # 4. Envie a branch e abra o Pull Request no GitHub (destino: develop)
 git push -u origin feature/nome-da-tarefa
@@ -46,6 +46,9 @@ git push -u origin feature/nome-da-tarefa
 ```
 
 Cada passo é explicado nas seções abaixo.
+
+> [!TIP]
+> **Primeira vez no projeto?** Antes do passo 1, rode `uv sync` na raiz do repositório. Ele instala as dependências e as ferramentas de verificação (mypy, ruff e pytest).
 
 ---
 
@@ -128,7 +131,7 @@ git commit -m "feat(usuario): adiciona enum TipoNivelAcesso"
 | :--- | :--- | :--- |
 | `feat` | Adicionar algo novo | _feat(usuario): adiciona classe Usuario_ |
 | `fix` | Corrigir um erro | _fix(agenda): corrige cálculo da data de término_ |
-| `docs` | Mexer só em documentação | _docs(log): adiciona modelagem UML inicial_ |
+| `docs` | Mexer só em documentação (inclui docstrings) | _docs(usuario): adiciona docstring da classe Usuario_ |
 | `test` | Criar ou ajustar testes | _test(usuario): adiciona testes da classe Usuario_ |
 | `refactor` | Reorganizar o código sem mudar o comportamento | _refactor(agenda): extrai função auxiliar de datas_ |
 
@@ -155,12 +158,38 @@ Antes de abrir o Pull Request, rode as três verificações abaixo na raiz do pr
 
 | Ferramenta | O que verifica | Comando |
 | :--- | :--- | :--- |
-| **mypy** | Se os tipos (type hints) estão corretos | `mypy .` |
-| **ruff** | Se o código está limpo, seguindo a PEP 8 | `ruff check .` |
-| **pytest** | Se os testes estão passando | `pytest` |
+| **mypy** | Se os tipos (type hints) estão corretos | `uv run mypy .` |
+| **ruff** | Se o código está limpo, seguindo a PEP 8, e se toda classe tem docstring | `uv run ruff check .` |
+| **pytest** | Se os testes estão passando | `uv run pytest` |
 
 > [!TIP]
-> O `ruff` corrige muitos problemas sozinho: `ruff check . --fix`.
+> O `ruff` corrige muitos problemas sozinho: `uv run ruff check . --fix`. A falta de docstring ele **não** corrige: essa você escreve.
+
+### Toda classe precisa de docstring
+
+Docstring é um texto curto, entre aspas triplas, logo abaixo da linha `class`, explicando para que a classe serve. O `ruff` acusa erro (`D101`) quando ela falta.
+
+```python
+# ❌ Vai falhar na verificação
+class Usuario:
+    def __init__(self, nome: str) -> None:
+        self.nome = nome
+
+
+# ✅ Passa
+class Usuario:
+    """Representa uma pessoa que usa o Agend.ae."""
+
+    def __init__(self, nome: str) -> None:
+        self.nome = nome
+```
+
+> [!NOTE]
+> A regra vale para classes **públicas** (nome sem `_` no início) e para classes aninhadas dentro de outras (`D106`).
+
+### E se eu esquecer de rodar?
+
+Sem problema: ao abrir o Pull Request, o GitHub roda essas mesmas três verificações automaticamente. Se alguma falhar, o PR mostra um ❌ na área de checks. Corrija, faça um novo `git push` e elas rodam de novo. Mesmo assim, rodar antes no seu computador economiza tempo.
 
 Se tudo passou, o seu código está pronto para revisão.
 
@@ -200,6 +229,7 @@ Coloque o link da issue/task do quadro kanban
 
 ### Depois de abrir o PR
 
+- Confira se os checks automáticos do PR estão verdes (✅). Se algum estiver vermelho (❌), corrija antes de pedir atenção do revisor.
 - O revisor lê o código e pode pedir ajustes. Faça as correções na mesma branch e envie de novo com `git push`; o PR se atualiza sozinho.
 - Quando o revisor aprovar, o autor do PR faz o merge.
 - **Nunca aprove o seu próprio PR.**
